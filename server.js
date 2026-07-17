@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express  = require('express');
+const session  = require('express-session');
 const multer   = require('multer');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode   = require('qrcode');
@@ -8,6 +9,51 @@ const fs       = require('fs');
 const path     = require('path');
 
 const app = express();
+
+// ── Session + auth ────────────────────────────────────────────────────────────
+app.use(session({
+    secret:            process.env.SESSION_SECRET || 'changeme-in-production',
+    resave:            false,
+    saveUninitialized: false,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true } // 7 days
+}));
+
+function requireAuth(req, res, next) {
+    if (req.session.authenticated) return next();
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+        return res.status(401).json({ error: 'Unauthorised' });
+    }
+    res.redirect('/login');
+}
+
+// ── Public routes (no auth) ───────────────────────────────────────────────────
+app.get('/login', (req, res) => {
+    if (req.session.authenticated) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/auth/login', express.urlencoded({ extended: false }), (req, res) => {
+    const email    = (req.body.email    || '').trim();
+    const password = req.body.password  || '';
+    const expectedEmail    = (process.env.AUTH_EMAIL    || '').trim();
+    const expectedPassword = process.env.AUTH_PASSWORD  || '';
+    if (!expectedEmail || !expectedPassword) {
+        console.error('AUTH_EMAIL / AUTH_PASSWORD env vars are not set');
+        return res.redirect('/login?error=1');
+    }
+    if (email === expectedEmail && password === expectedPassword) {
+        req.session.authenticated = true;
+        return res.redirect('/');
+    }
+    res.redirect('/login?error=1');
+});
+
+app.post('/auth/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/login'));
+});
+
+// ── Auth wall — everything below requires login ───────────────────────────────
+app.use(requireAuth);
 
 app.use(express.json({ limit: '25mb' }));
 const upload = multer({ dest: 'uploads/' });
