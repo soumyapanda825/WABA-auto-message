@@ -36,8 +36,13 @@ app.get('/login', (req, res) => {
 
 app.post('/auth/login', express.urlencoded({ extended: false }), (req, res) => {
     const { email, password } = req.body;
+    const hash = process.env.AUTH_PASSWORD_HASH;
+    if (!hash) {
+        console.error('AUTH_PASSWORD_HASH env var is not set — set it in Railway Variables');
+        return res.redirect('/login?error=1');
+    }
     const emailOk    = email === (process.env.AUTH_EMAIL || '');
-    const passwordOk = bcrypt.compareSync(password || '', process.env.AUTH_PASSWORD_HASH || '');
+    const passwordOk = bcrypt.compareSync(password || '', hash);
     if (emailOk && passwordOk) {
         req.session.authenticated = true;
         return res.redirect('/');
