@@ -1,0 +1,6 @@
+{
+  "csvFile": "contacts.csv",
+  "photoPath": "photo.jpg",
+  "messageTemplate": "Hello {name}, this is a message from us! We hope you're doing well.",
+  "delayBetweenMessages": 3000
+}

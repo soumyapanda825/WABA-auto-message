@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EventBooze Vendor Outreach</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #111b21;
+  min-height: 100vh;
+}
+
+header {
+  background: #128c7e;
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  position: sticky; top: 0; z-index: 10;
+}
+header svg { width: 26px; height: 26px; flex-shrink: 0; }
+header h1 { font-size: 1.15rem; font-weight: 600; }
+
+main {
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 0 16px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Card ── */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+.card-header {
+  padding: 13px 20px;
+  font-weight: 600;
+  font-size: .8rem;
+  color: #54656f;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 1px solid #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-body { padding: 20px; }
+
+/* ── Status ── */
+#status-bar { display: flex; align-items: center; gap: 10px; font-size: .95rem; font-weight: 500; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #aaa; flex-shrink: 0; transition: background .3s; }
+.dot.initializing, .dot.qr { background: #f0ad4e; animation: pulse 1.2s infinite; }
+.dot.authenticated { background: #5bc0de; }
+.dot.ready         { background: #25d366; }
+.dot.disconnected  { background: #d9534f; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+
+#qr-section { text-align: center; margin-top: 20px; }
+#qr-section p { color: #54656f; font-size: .875rem; margin-bottom: 16px; }
+#qr-img { width: 210px; height: 210px; border: 6px solid #25d366; border-radius: 8px; }
+
+/* ── Templates ── */
+.templates-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.templates-scroll::-webkit-scrollbar { height: 4px; }
+.templates-scroll::-webkit-scrollbar-thumb { background: #d9dee2; border-radius: 4px; }
+
+.tpl-card {
+  flex-shrink: 0;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px 14px 12px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+  max-width: 180px;
+  position: relative;
+  transition: border-color .15s, background .15s;
+}
+.tpl-card:hover { border-color: #128c7e; background: #f0faf9; }
+.tpl-card.active { border-color: #128c7e; background: #e8f5e9; }
+.tpl-icon { font-size: 1.2rem; flex-shrink: 0; }
+.tpl-name {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #111b21;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.tpl-del {
+  position: absolute;
+  top: 4px; right: 5px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: .75rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.tpl-del:hover { color: #d9534f; background: #fff0f0; }
+
+.empty-hint { color: #8696a0; font-size: .875rem; }
+
+/* ── Buttons ── */
+.btn-sm {
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #128c7e;
+  color: #fff;
+  transition: background .15s;
+}
+.btn-sm:hover { background: #0e7a6d; }
+.btn-sm.secondary { background: #f0f2f5; color: #54656f; }
+.btn-sm.secondary:hover { background: #e2e8ed; }
+.btn-danger { background: #fff0f0; color: #d9534f; }
+.btn-danger:hover { background: #ffe0e0; }
+
+.badge {
+  font-size: .75rem;
+  font-weight: 600;
+  background: #e8f5e9;
+  color: #128c7e;
+  border: 1px solid #128c7e;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+/* ── Form ── */
+label { display: block; font-size: .875rem; font-weight: 500; color: #54656f; margin-bottom: 6px; }
+.hint { font-size: .78rem; color: #8696a0; margin-top: 4px; }
+.form-gap { display: flex; flex-direction: column; gap: 18px; }
+
+textarea {
+  width: 100%;
+  border: 1.5px solid #d9dee2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: .95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  outline: none;
+  transition: border-color .2s;
+  color: #111b21;
+}
+textarea:focus { border-color: #128c7e; }
+
+/* ── Photo area ── */
+.photo-row { display: flex; gap: 16px; align-items: flex-start; }
+.photo-col { flex: 1; }
+
+.file-drop {
+  border: 2px dashed #d9dee2;
+  border-radius: 8px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+.file-drop:hover, .file-drop.over { border-color: #128c7e; background: #f0faf9; }
+.file-drop input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-drop .icon { font-size: 1.8rem; margin-bottom: 6px; }
+.file-drop .lbl  { font-size: .8rem; color: #54656f; }
+.file-drop .chosen { font-size: .78rem; color: #128c7e; font-weight: 500; margin-top: 4px; }
+
+.photo-preview-box {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.photo-preview-box img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.photo-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+}
+
+/* ── CSV drop row ── */
+.csv-drop-row { display: flex; gap: 16px; }
+.csv-drop-row .file-drop { flex: 1; }
+
+/* ── CSV Preview ── */
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.preview-count {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #128c7e;
+}
+.contacts-table-wrap {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.contacts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.contacts-table th {
+  background: #f8f9fa;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #54656f;
+  position: sticky; top: 0;
+  border-bottom: 1px solid #e9ecef;
+}
+.contacts-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f0f2f5;
+  color: #111b21;
+}
+.contacts-table tr:last-child td { border-bottom: none; }
+.contacts-table tr:hover td { background: #f8f9fa; }
+
+/* ── Send button ── */
+button[type=submit] {
+  width: 100%;
+  padding: 13px;
+  background: #128c7e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, opacity .2s;
+}
+button[type=submit]:hover:not(:disabled) { background: #0e7a6d; }
+button[type=submit]:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Progress ── */
+.progress-bar-wrap { background: #f0f2f5; border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 14px; }
+#progress-bar { height: 100%; background: #25d366; border-radius: 99px; width: 0%; transition: width .4s; }
+#progress-count { font-size: .875rem; color: #54656f; margin-bottom: 10px; }
+#log-list { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+
+.log-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: .875rem; padding: 8px 12px; border-radius: 6px; background: #f8f9fa;
+}
+.log-item.success { background: #f0faf9; }
+.log-item.fail    { background: #fff5f5; }
+.log-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.log-name { font-weight: 500; }
+.log-num  { color: #8696a0; font-size: .8rem; }
+.log-err  { color: #d9534f; font-size: .78rem; margin-top: 2px; }
+
+/* ── Manual entry ── */
+.manual-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: #8696a0; font-size: .78rem; margin: 6px 0 2px;
+}
+.manual-divider::before, .manual-divider::after {
+  content: ''; flex: 1; height: 1px; background: #e9ecef;
+}
+.manual-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.manual-row input {
+  border: 1.5px solid #d9dee2; border-radius: 8px; padding: 9px 12px;
+  font-size: .88rem; font-family: inherit; outline: none; color: #111b21;
+  transition: border-color .2s; width: 100%;
+}
+.manual-row input:focus { border-color: #128c7e; }
+.manual-row input::placeholder { color: #aaa; }
+
+/* ── History ── */
+.history-list { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; }
+.history-actions { display: flex; gap: 8px; align-items: center; }
+.history-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 8px; background: #f8f9fa;
+  border: 1px solid #f0f2f5;
+}
+.history-item.success { background: #f0faf9; border-color: #e0f5f0; }
+.history-item.fail    { background: #fff5f5; border-color: #ffe0e0; }
+.history-icon { font-size: 1.1rem; flex-shrink: 0; }
+.history-info { flex: 1; min-width: 0; }
+.history-name { font-weight: 600; font-size: .88rem; }
+.history-num  { font-size: .78rem; color: #8696a0; }
+.history-time { font-size: .75rem; color: #aaa; white-space: nowrap; }
+
+/* ── Modal ── */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+  padding: 16px;
+}
+.modal-box {
+  background: #fff; border-radius: 14px; padding: 26px 24px;
+  width: 480px; max-width: 100%; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+}
+.modal-box h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; color: #111b21; }
+.modal-field { margin-bottom: 14px; }
+.modal-field label { display: block; font-size: .82rem; font-weight: 600; color: #54656f; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+.modal-field input[type=text],
+.modal-field textarea {
+  width: 100%; border: 1.5px solid #d9dee2; border-radius: 8px;
+  padding: 10px 12px; font-size: .92rem; font-family: inherit; outline: none;
+  transition: border-color .2s; color: #111b21; resize: vertical;
+}
+.modal-field input[type=text]:focus,
+.modal-field textarea:focus { border-color: #128c7e; }
+.modal-field textarea { min-height: 90px; }
+.modal-hint { font-size: .75rem; color: #8696a0; margin-top: 4px; }
+
+/* modal photo */
+.tpl-photo-drop {
+  border: 2px dashed #d9dee2; border-radius: 8px; padding: 14px;
+  text-align: center; cursor: pointer; position: relative;
+  transition: border-color .2s, background .2s; font-size: .82rem; color: #54656f;
+}
+.tpl-photo-drop:hover { border-color: #128c7e; background: #f0faf9; }
+.tpl-photo-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.tpl-photo-preview-box { border: 1.5px solid #e9ecef; border-radius: 8px; overflow: hidden; }
+.tpl-photo-preview-box img { width: 100%; max-height: 130px; object-fit: cover; display: block; }
+.tpl-photo-actions { display: flex; gap: 8px; padding: 7px; background: #f8f9fa; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-primary {
+  flex: 1; padding: 10px; background: #128c7e; color: #fff;
+  border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { background: #0e7a6d; }
+.btn-ghost {
+  flex: 1; padding: 10px; background: #f0f2f5; color: #54656f;
+  border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer;
+}
+.btn-ghost:hover { background: #e2e8ed; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+  <h1>EventBooze Vendor Outreach</h1>
+</header>
+
+<main>
+
+  <!-- Connection -->
+  <div class="card">
+    <div class="card-header">WhatsApp Connection</div>
+    <div class="card-body">
+      <div id="status-bar">
+        <div class="dot initializing" id="dot"></div>
+        <span id="status-text">Initialising…</span>
+      </div>
+      <div id="qr-section" style="display:none;">
+        <p>Open WhatsApp Business → Linked Devices → Link a Device</p>
+        <img id="qr-img" alt="QR Code" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <div class="card">
+    <div class="card-header">
+      <span>Message Templates</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm secondary" onclick="openNewTemplateModal()">+ New Template</button>
+        <button class="btn-sm" onclick="openSaveModal()">⬇ Save Current</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="templates-empty" class="empty-hint">No templates yet — compose a message and click <strong>+ Save Current</strong>.</div>
+      <div id="templates-scroll" class="templates-scroll" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Compose -->
+  <div class="card">
+    <div class="card-header">
+      <span>Compose &amp; Send</span>
+      <span id="active-badge" class="badge" style="display:none;"></span>
+    </div>
+    <div class="card-body">
+      <form id="send-form" class="form-gap">
+
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Hello <>, we have something exciting for you!" required></textarea>
+          <p class="hint">Use <strong>&lt;&gt;</strong> where each contact's name should appear.</p>
+        </div>
+
+        <div class="photo-row">
+          <div class="photo-col">
+            <label>Photo (optional)</label>
+            <div id="photo-placeholder" class="file-drop">
+              <input type="file" id="photo-input" accept="image/*" />
+              <div class="icon">🖼️</div>
+              <div class="lbl">Click or drag photo</div>
+            </div>
+            <div id="photo-preview-box" class="photo-preview-box" style="display:none;">
+              <img id="photo-preview-img" alt="Preview" />
+              <div class="photo-actions">
+                <label for="photo-input" class="btn-sm secondary" style="cursor:pointer; display:inline-block;">Change</label>
+                <input type="file" id="photo-input-change" accept="image/*" style="display:none;" />
+                <button type="button" class="btn-sm secondary" onclick="removePhoto()">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="photo-col">
+            <label>Contacts CSV</label>
+            <div class="file-drop" id="csv-drop">
+              <input type="file" id="csv-input" accept=".csv,text/csv" />
+              <div class="icon">📋</div>
+              <div class="lbl">Click or drag CSV</div>
+              <div class="chosen" id="csv-chosen"></div>
+            </div>
+            <p class="hint">Columns: <code>number</code>, <code>name</code></p>
+            <div class="manual-divider">or add a single contact</div>
+            <div class="manual-row">
+              <input type="text" id="manual-name"   placeholder="Name" autocomplete="off" />
+              <input type="text" id="manual-number" placeholder="Number (e.g. 919876543210)" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+
+        <!-- CSV preview -->
+        <div id="csv-preview-section" style="display:none;">
+          <div class="preview-header">
+            <span class="preview-count" id="csv-count"></span>
+          </div>
+          <div class="contacts-table-wrap">
+            <table class="contacts-table">
+              <thead><tr><th>#</th><th>Name</th><th>Number</th></tr></thead>
+              <tbody id="contacts-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button type="submit" id="send-btn" disabled>Connect WhatsApp first</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card" id="progress-card" style="display:none;">
+    <div class="card-header">Sending Progress</div>
+    <div class="card-body">
+      <div class="progress-bar-wrap"><div id="progress-bar"></div></div>
+      <div id="progress-count"></div>
+      <div id="log-list"></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card" id="history-card" style="display:none;">
+    <div class="card-header">
+      <span>Sent History</span>
+      <div class="history-actions">
+        <button class="btn-sm secondary" onclick="downloadHistoryCSV(true)">⬇ Sent CSV</button>
+        <button class="btn-sm secondary" onclick="downloadHistoryCSV(false)">⬇ Failed CSV</button>
+        <button class="btn-sm btn-danger" onclick="clearHistory()">Clear All</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Template Modal (new + save-current) -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <h3 id="modal-title">New Template</h3>
+
+    <div class="modal-field">
+      <label for="tpl-name-input">Template Name</label>
+      <input type="text" id="tpl-name-input" placeholder="e.g. Festival Offer" autocomplete="off" />
+    </div>
+
+    <div class="modal-field">
+      <label for="tpl-message-input">Message</label>
+      <textarea id="tpl-message-input" placeholder="Hello <>, we have something for you!"></textarea>
+      <p class="modal-hint">Use <strong>&lt;&gt;</strong> where the contact's name should appear.</p>
+    </div>
+
+    <div class="modal-field">
+      <label>Photo (optional)</label>
+      <div id="tpl-photo-placeholder" class="tpl-photo-drop">
+        <input type="file" id="tpl-photo-input" accept="image/*" />
+        🖼️ Click to add a photo
+      </div>
+      <div id="tpl-photo-preview-box" class="tpl-photo-preview-box" style="display:none;">
+        <img id="tpl-photo-img" alt="Template photo" />
+        <div class="tpl-photo-actions">
+          <label for="tpl-photo-input" class="btn-sm secondary" style="cursor:pointer;">Change</label>
+          <button type="button" class="btn-sm secondary" onclick="removeTplPhoto()">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="confirmSaveTemplate()">Save Template</button>
+      <button class="btn-ghost"   onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentPhoto     = null; // { dataUrl, base64, mimetype, filename }
+let modalPhoto       = null; // photo being edited inside the template modal
+let csvContacts      = [];
+let templates        = [];
+let activeTemplateId = null;
+let historyData      = []; // full history array kept for CSV export
+
+// ── SSE ───────────────────────────────────────────────────────────────────────
+const es = new EventSource('/api/events');
+es.addEventListener('status', e => setStatus(JSON.parse(e.data)));
+es.addEventListener('log',    e => handleLog(JSON.parse(e.data)));
+es.addEventListener('historyCleared', () => {
+  historyData = [];
+  document.getElementById('history-list').innerHTML = '';
+  document.getElementById('history-card').style.display = 'none';
+});
+
+// ── WhatsApp status ───────────────────────────────────────────────────────────
+function setStatus({ status, qr }) {
+  const dot     = document.getElementById('dot');
+  const text    = document.getElementById('status-text');
+  const qrSec   = document.getElementById('qr-section');
+  const btn     = document.getElementById('send-btn');
+  const labels  = { initializing:'Initialising…', qr:'Scan QR code to connect…',
+                    authenticated:'Authenticated — loading…', ready:'Connected ✓', disconnected:'Disconnected' };
+  dot.className  = 'dot ' + status;
+  text.textContent = labels[status] || status;
+  qrSec.style.display = (status === 'qr' && qr) ? 'block' : 'none';
+  if (status === 'qr' && qr) document.getElementById('qr-img').src = qr;
+  btn.disabled     = status !== 'ready';
+  btn.textContent  = status === 'ready' ? 'Send Messages' :
+                     status === 'disconnected' ? 'WhatsApp disconnected' : 'Connect WhatsApp first';
+}
+
+// ── Progress / log ────────────────────────────────────────────────────────────
+function handleLog(data) {
+  const bar    = document.getElementById('progress-bar');
+  const count  = document.getElementById('progress-count');
+  const list   = document.getElementById('log-list');
+
+  if (data.type === 'start') {
+    count.textContent = `0 / ${data.total} sent`;
+    return;
+  }
+  if (data.type === 'warning') {
+    const w = document.createElement('div');
+    w.className = 'log-item';
+    w.textContent = '⚠️ ' + data.message;
+    list.appendChild(w);
+    list.scrollTop = list.scrollHeight;
+    return;
+  }
+  if (data.type === 'sent') {
+    const pct = Math.round((data.index / data.total) * 100);
+    bar.style.width  = pct + '%';
+    count.textContent = `${data.index} / ${data.total} sent`;
+
+    const item = document.createElement('div');
+    item.className = 'log-item ' + (data.success ? 'success' : 'fail');
+    item.innerHTML = `
+      <span class="log-icon">${data.success ? '✅' : '❌'}</span>
+      <div>
+        <div><span class="log-name">${esc(data.name)}</span>&nbsp;<span class="log-num">${esc(data.number)}</span></div>
+        ${!data.success ? `<div class="log-err">${esc(data.error || 'Failed')}</div>` : ''}
+      </div>`;
+    list.appendChild(item);
+    list.scrollTop = list.scrollHeight;
+
+    // Real-time history update
+    prependHistoryItem(data);
+    return;
+  }
+  if (data.type === 'done') {
+    bar.style.width   = '100%';
+    count.textContent = `Done — ${data.total} processed`;
+    const btn = document.getElementById('send-btn');
+    btn.disabled    = false;
+    btn.textContent = 'Send Messages';
+  }
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────────
+async function loadTemplates() {
+  const res = await fetch('/api/templates');
+  templates = await res.json();
+  renderTemplates();
+}
+
+function renderTemplates() {
+  const scroll = document.getElementById('templates-scroll');
+  const empty  = document.getElementById('templates-empty');
+  if (templates.length === 0) {
+    empty.style.display  = 'block';
+    scroll.style.display = 'none';
+    return;
+  }
+  empty.style.display  = 'none';
+  scroll.style.display = 'flex';
+  scroll.innerHTML = templates.map(t => `
+    <div class="tpl-card ${t.id === activeTemplateId ? 'active' : ''}"
+         onclick="applyTemplate('${t.id}')" title="${esc(t.name)}">
+      <span class="tpl-icon">${t.hasPhoto ? '📷' : '💬'}</span>
+      <span class="tpl-name">${esc(t.name)}</span>
+      <button class="tpl-del" onclick="event.stopPropagation();deleteTemplate('${t.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+async function applyTemplate(id) {
+  const res = await fetch(`/api/templates/${id}`);
+  const t   = await res.json();
+
+  document.getElementById('message').value = t.message;
+
+  if (t.photo) {
+    currentPhoto = {
+      dataUrl:  `data:${t.photo.mimetype};base64,${t.photo.data}`,
+      base64:   t.photo.data,
+      mimetype: t.photo.mimetype,
+      filename: t.photo.filename
+    };
+    showPhotoPreview(currentPhoto.dataUrl);
+  } else {
+    currentPhoto = null;
+    hidePhotoPreview();
+  }
+
+  activeTemplateId = id;
+  renderTemplates();
+  showActiveBadge(t.name);
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+  if (activeTemplateId === id) { activeTemplateId = null; hideActiveBadge(); }
+  loadTemplates();
+}
+
+// Open modal for creating a brand-new template (blank form)
+function openNewTemplateModal() {
+  modalPhoto = null;
+  document.getElementById('modal-title').textContent        = 'New Template';
+  document.getElementById('tpl-name-input').value           = '';
+  document.getElementById('tpl-message-input').value        = '';
+  hideTplPhotoPreview();
+  document.getElementById('modal-overlay').style.display    = 'flex';
+  setTimeout(() => document.getElementById('tpl-name-input').focus(), 60);
+}
+
+// Open modal pre-filled with the current compose state ("Save Current")
+function openSaveModal() {
+  const activeName = activeTemplateId ? (templates.find(t => t.id === activeTemplateId)?.name || '') : '';
+  modalPhoto = currentPhoto ? { ...currentPhoto } : null;
+  document.getElementById('modal-title').textContent     = activeName ? 'Update Template' : 'Save as Template';
+  document.getElementById('tpl-name-input').value        = activeName;
+  document.getElementById('tpl-message-input').value     = document.getElementById('message').value;
+  if (modalPhoto) showTplPhotoPreview(modalPhoto.dataUrl);
+  else            hideTplPhotoPreview();
+  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('tpl-name-input').focus(), 60);
+}
+
+function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+async function confirmSaveTemplate() {
+  const name    = document.getElementById('tpl-name-input').value.trim();
+  const message = document.getElementById('tpl-message-input').value.trim();
+  if (!name)    { alert('Enter a template name'); return; }
+  if (!message) { alert('Enter a message for this template'); return; }
+
+  // Determine which existing template we might be overwriting
+  const editingId = activeTemplateId && (templates.find(t => t.id === activeTemplateId)?.name === name)
+    ? activeTemplateId : null;
+  const clash = templates.find(t => t.name === name && t.id !== editingId);
+  if (clash && !confirm(`"${name}" already exists. Overwrite?`)) return;
+
+  const body = {
+    name, message,
+    photo: modalPhoto ? { data: modalPhoto.base64, mimetype: modalPhoto.mimetype, filename: modalPhoto.filename } : null
+  };
+  const res  = await fetch('/api/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.ok) {
+    activeTemplateId = data.id;
+    closeModal();
+    await loadTemplates();
+  }
+}
+
+// Modal photo handlers
+document.getElementById('tpl-photo-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    modalPhoto = { dataUrl, base64: dataUrl.split(',')[1], mimetype: file.type || 'image/jpeg', filename: file.name };
+    showTplPhotoPreview(dataUrl);
+  };
+  reader.readAsDataURL(file);
+});
+
+function showTplPhotoPreview(dataUrl) {
+  document.getElementById('tpl-photo-placeholder').style.display  = 'none';
+  document.getElementById('tpl-photo-preview-box').style.display  = 'block';
+  document.getElementById('tpl-photo-img').src                    = dataUrl;
+}
+function hideTplPhotoPreview() {
+  document.getElementById('tpl-photo-preview-box').style.display  = 'none';
+  document.getElementById('tpl-photo-placeholder').style.display  = 'block';
+  document.getElementById('tpl-photo-input').value                = '';
+}
+function removeTplPhoto() {
+  modalPhoto = null;
+  hideTplPhotoPreview();
+}
+
+// Escape closes modal; Enter only triggers save from the name field (not textarea)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && e.target.id === 'tpl-name-input' &&
+      document.getElementById('modal-overlay').style.display === 'flex') {
+    e.preventDefault();
+    document.getElementById('tpl-message-input').focus();
+  }
+});
+
+function showActiveBadge(name) {
+  const b = document.getElementById('active-badge');
+  b.textContent   = '📋 ' + name;
+  b.style.display = 'inline-block';
+}
+function hideActiveBadge() {
+  document.getElementById('active-badge').style.display = 'none';
+}
+
+// ── Photo ─────────────────────────────────────────────────────────────────────
+function onPhotoFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    currentPhoto = { dataUrl, base64: dataUrl.split(',')[1], mimetype: file.type || 'image/jpeg', filename: file.name };
+    showPhotoPreview(dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('photo-input').addEventListener('change', function() { onPhotoFile(this.files[0]); });
+
+function showPhotoPreview(dataUrl) {
+  document.getElementById('photo-placeholder').style.display  = 'none';
+  document.getElementById('photo-preview-box').style.display  = 'block';
+  document.getElementById('photo-preview-img').src            = dataUrl;
+}
+function hidePhotoPreview() {
+  document.getElementById('photo-preview-box').style.display  = 'none';
+  document.getElementById('photo-placeholder').style.display  = 'block';
+  document.getElementById('photo-input').value = '';
+}
+function removePhoto() {
+  currentPhoto = null;
+  hidePhotoPreview();
+}
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+document.getElementById('csv-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  document.getElementById('csv-chosen').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const contacts = parseCSVText(e.target.result);
+    if (contacts === null) {
+      alert('CSV must have columns named "number" and "name"');
+      csvContacts = [];
+    } else {
+      csvContacts = contacts;
+    }
+    updatePreview();
+  };
+  reader.readAsText(file);
+});
+
+// Manual entry — live preview update
+document.getElementById('manual-name').addEventListener('input',   updatePreview);
+document.getElementById('manual-number').addEventListener('input', updatePreview);
+
+function parseCSVText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  const ni = headers.findIndex(h => h === 'number');
+  const mi = headers.findIndex(h => h === 'name');
+  if (ni === -1 || mi === -1) return null;
+  return lines.slice(1).map(line => {
+    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    return { number: cols[ni], name: cols[mi] };
+  }).filter(c => c.number && c.name);
+}
+
+function updatePreview() {
+  const manualName   = document.getElementById('manual-name').value.trim();
+  const manualNumber = document.getElementById('manual-number').value.trim();
+  const manual       = (manualName && manualNumber) ? [{ name: manualName, number: manualNumber }] : [];
+  const all          = [...csvContacts, ...manual];
+
+  const section = document.getElementById('csv-preview-section');
+  if (all.length === 0) { section.style.display = 'none'; return; }
+
+  document.getElementById('csv-count').textContent =
+    `${all.length} contact${all.length !== 1 ? 's' : ''} ready to send`;
+
+  document.getElementById('contacts-tbody').innerHTML = all.map((c, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${esc(c.name)}</td>
+      <td>${esc(c.number)}</td>
+    </tr>
+  `).join('');
+
+  section.style.display = 'block';
+}
+
+// Drag highlight for drops
+['csv-drop'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('over'));
+  el.addEventListener('drop',     () => el.classList.remove('over'));
+});
+
+// ── Send form ─────────────────────────────────────────────────────────────────
+document.getElementById('send-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const csvFile      = document.getElementById('csv-input').files[0];
+  const manualName   = document.getElementById('manual-name').value.trim();
+  const manualNumber = document.getElementById('manual-number').value.trim();
+  const message      = document.getElementById('message').value.trim();
+
+  if (!csvFile && !(manualName && manualNumber)) {
+    alert('Upload a CSV or fill in the single contact fields (name + number)');
+    return;
+  }
+  if (!message) { alert('Please enter a message'); return; }
+
+  const fd = new FormData();
+  if (csvFile)      fd.append('csv',          csvFile);
+  if (manualName)   fd.append('manualName',   manualName);
+  if (manualNumber) fd.append('manualNumber', manualNumber);
+  fd.append('message', message);
+  if (currentPhoto) {
+    fd.append('photoBase64',   currentPhoto.base64);
+    fd.append('photoMimetype', currentPhoto.mimetype);
+    fd.append('photoFilename', currentPhoto.filename);
+  }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Starting…';
+
+  // Reset progress section
+  document.getElementById('progress-card').style.display = 'block';
+  document.getElementById('log-list').innerHTML           = '';
+  document.getElementById('progress-bar').style.width    = '0%';
+  document.getElementById('progress-count').textContent  = '';
+  document.getElementById('progress-card').scrollIntoView({ behavior: 'smooth' });
+
+  try {
+    const res  = await fetch('/api/send', { method: 'POST', body: fd });
+    const json = await res.json();
+    if (!res.ok) {
+      alert('Error: ' + (json.error || res.statusText));
+      btn.disabled    = false;
+      btn.textContent = 'Send Messages';
+    }
+  } catch (err) {
+    alert('Network error: ' + err.message);
+    btn.disabled    = false;
+    btn.textContent = 'Send Messages';
+  }
+});
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const res  = await fetch('/api/history');
+  historyData = await res.json(); // newest first
+  const card = document.getElementById('history-card');
+  const list = document.getElementById('history-list');
+  if (historyData.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = historyData.map(h => historyItemHTML(h)).join('');
+}
+
+function prependHistoryItem(entry) {
+  historyData.unshift(entry);
+  const card = document.getElementById('history-card');
+  const list = document.getElementById('history-list');
+  card.style.display = 'block';
+  list.insertAdjacentHTML('afterbegin', historyItemHTML(entry));
+}
+
+function historyItemHTML(h) {
+  return `
+    <div class="history-item ${h.success ? 'success' : 'fail'}">
+      <span class="history-icon">${h.success ? '✅' : '❌'}</span>
+      <div class="history-info">
+        <div class="history-name">${esc(h.name)}</div>
+        <div class="history-num">${esc(h.number)}</div>
+      </div>
+      <div class="history-time">${fmtTime(h.timestamp)}</div>
+    </div>`;
+}
+
+async function clearHistory() {
+  if (!confirm('Clear all sent history?')) return;
+  await fetch('/api/history', { method: 'DELETE' });
+  historyData = [];
+}
+
+function downloadHistoryCSV(successOnly) {
+  const entries = historyData.filter(h => h.success === successOnly);
+  if (entries.length === 0) {
+    alert(`No ${successOnly ? 'sent' : 'failed'} entries to download`);
+    return;
+  }
+  const header = successOnly
+    ? ['Name', 'Number', 'Timestamp']
+    : ['Name', 'Number', 'Error', 'Timestamp'];
+  const rows = [header, ...entries.map(h => successOnly
+    ? [h.name, h.number, h.timestamp]
+    : [h.name, h.number, h.error || '', h.timestamp]
+  )];
+  const csvText = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a       = Object.assign(document.createElement('a'), {
+    href:     URL.createObjectURL(new Blob([csvText], { type: 'text/csv' })),
+    download: successOnly ? 'sent_contacts.csv' : 'failed_contacts.csv'
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadTemplates();
+loadHistory();
+</script>
+</body>
+</html>
