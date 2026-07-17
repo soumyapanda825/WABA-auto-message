@@ -154,8 +154,9 @@ function buildClient() {
     return c;
 }
 
+// WhatsApp is initialised after the HTTP server is already listening
+// so Railway's health check gets a response immediately
 client = buildClient();
-client.initialize();
 
 // ── Static + SSE ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
@@ -355,4 +356,8 @@ async function sendMessages(contacts, template, templatePhoto) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`\nOpen http://localhost:${PORT} in your browser\n`));
+// Bind to 0.0.0.0 so Railway's proxy can reach the process, then start WhatsApp
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\nServer listening on port ${PORT}\n`);
+    client.initialize().catch(err => console.error('WhatsApp init error:', err.message));
+});
