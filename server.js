@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express  = require('express');
 const session  = require('express-session');
-const bcrypt   = require('bcryptjs');
 const multer   = require('multer');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode   = require('qrcode');
@@ -36,13 +35,13 @@ app.get('/login', (req, res) => {
 
 app.post('/auth/login', express.urlencoded({ extended: false }), (req, res) => {
     const { email, password } = req.body;
-    const hash = process.env.AUTH_PASSWORD_HASH;
-    if (!hash) {
-        console.error('AUTH_PASSWORD_HASH env var is not set — set it in Railway Variables');
+    const expectedPassword = process.env.AUTH_PASSWORD;
+    if (!expectedPassword) {
+        console.error('AUTH_PASSWORD env var is not set — set it in Railway Variables');
         return res.redirect('/login?error=1');
     }
     const emailOk    = email === (process.env.AUTH_EMAIL || '');
-    const passwordOk = bcrypt.compareSync(password || '', hash);
+    const passwordOk = password === expectedPassword;
     if (emailOk && passwordOk) {
         req.session.authenticated = true;
         return res.redirect('/');
