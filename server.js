@@ -92,13 +92,17 @@ function waitForReady(timeoutMs = 90000) {
     });
 }
 
-async function forceReconnect() {
+async function forceReconnect({ clearSession = false } = {}) {
     if (reconnecting) return waitForReady(90000);
     reconnecting = true;
     waState = { status: 'disconnected', qr: null };
     broadcast('status', waState);
     console.log('Force-reconnecting…');
     try { await client.destroy(); } catch (_) {}
+    if (clearSession) {
+        const wwebjsPath = process.env.WWEBJS_DATA_PATH || '.wwebjs_auth';
+        try { fs.rmSync(wwebjsPath, { recursive: true, force: true }); } catch (_) {}
+    }
     await sleep(3000);
     client = buildClient();
     client.initialize();
@@ -161,6 +165,11 @@ client = buildClient();
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/status', (_req, res) => res.json(waState));
+
+app.post('/api/reconnect', (_req, res) => {
+    forceReconnect({ clearSession: true }).catch(err => console.error('Manual reconnect failed:', err.message));
+    res.json({ ok: true });
+});
 
 app.get('/api/events', (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');

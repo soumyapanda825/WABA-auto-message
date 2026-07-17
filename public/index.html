@@ -393,6 +393,7 @@ button[type=submit]:disabled { opacity: .5; cursor: not-allowed; }
       <div id="status-bar">
         <div class="dot initializing" id="dot"></div>
         <span id="status-text">Initialising…</span>
+        <button id="reconnect-btn" class="btn-sm" style="display:none;" onclick="reconnectWA()">Reconnect via QR</button>
       </div>
       <div id="qr-section" style="display:none;">
         <p>Open WhatsApp Business → Linked Devices → Link a Device</p>
@@ -574,6 +575,7 @@ function setStatus({ status, qr }) {
   const text    = document.getElementById('status-text');
   const qrSec   = document.getElementById('qr-section');
   const btn     = document.getElementById('send-btn');
+  const reconnectBtn = document.getElementById('reconnect-btn');
   const labels  = { initializing:'Initialising…', qr:'Scan QR code to connect…',
                     authenticated:'Authenticated — loading…', ready:'Connected ✓', disconnected:'Disconnected' };
   dot.className  = 'dot ' + status;
@@ -583,6 +585,17 @@ function setStatus({ status, qr }) {
   btn.disabled     = status !== 'ready';
   btn.textContent  = status === 'ready' ? 'Send Messages' :
                      status === 'disconnected' ? 'WhatsApp disconnected' : 'Connect WhatsApp first';
+  reconnectBtn.style.display = status === 'disconnected' ? 'inline-block' : 'none';
+  reconnectBtn.disabled = false;
+  reconnectBtn.textContent = 'Reconnect via QR';
+}
+
+function reconnectWA() {
+  const reconnectBtn = document.getElementById('reconnect-btn');
+  reconnectBtn.disabled = true;
+  reconnectBtn.textContent = 'Reconnecting…';
+  fetch('/api/reconnect', { method: 'POST' })
+    .catch(err => alert('Reconnect failed: ' + err.message));
 }
 
 // ── Progress / log ────────────────────────────────────────────────────────────
