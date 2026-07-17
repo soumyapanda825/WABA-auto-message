@@ -1,17 +1,64 @@
-const express = require('express');
-const multer  = require('multer');
+require('dotenv').config();
+const express  = require('express');
+const session  = require('express-session');
+const bcrypt   = require('bcryptjs');
+const multer   = require('multer');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const qrcode  = require('qrcode');
-const csv     = require('csv-parser');
-const fs      = require('fs');
-const path    = require('path');
+const qrcode   = require('qrcode');
+const csv      = require('csv-parser');
+const fs       = require('fs');
+const path     = require('path');
 
 const app = express();
+
+// ── Session + auth ────────────────────────────────────────────────────────────
+app.use(session({
+    secret:            process.env.SESSION_SECRET || 'changeme-in-production',
+    resave:            false,
+    saveUninitialized: false,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true } // 7 days
+}));
+
+function requireAuth(req, res, next) {
+    if (req.session.authenticated) return next();
+    // API calls get 401 JSON, page requests get redirect
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+        return res.status(401).json({ error: 'Unauthorised' });
+    }
+    res.redirect('/login');
+}
+
+// ── Public routes (no auth) ───────────────────────────────────────────────────
+app.get('/login', (req, res) => {
+    if (req.session.authenticated) return res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/auth/login', express.urlencoded({ extended: false }), (req, res) => {
+    const { email, password } = req.body;
+    const emailOk    = email === (process.env.AUTH_EMAIL || '');
+    const passwordOk = bcrypt.compareSync(password || '', process.env.AUTH_PASSWORD_HASH || '');
+    if (emailOk && passwordOk) {
+        req.session.authenticated = true;
+        return res.redirect('/');
+    }
+    res.redirect('/login?error=1');
+});
+
+app.post('/auth/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/login'));
+});
+
+// ── Auth wall — everything below requires login ───────────────────────────────
+app.use(requireAuth);
+
 app.use(express.json({ limit: '25mb' }));
 const upload = multer({ dest: 'uploads/' });
 
 // ── Persistent data ───────────────────────────────────────────────────────────
-const DATA_DIR       = path.join(__dirname, 'data');
+// On cloud (Railway/Fly.io), point DATA_DIR at a mounted volume path via env var
+const DATA_DIR       = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR)
+                                             : path.join(__dirname, 'data');
 const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
 const HISTORY_FILE   = path.join(DATA_DIR, 'history.json');
 
@@ -57,16 +104,19 @@ async function forceReconnect() {
 let client;
 
 function buildClient() {
+    const wwebjsPath    = process.env.WWEBJS_DATA_PATH || '.wwebjs_auth';
+    const puppeteerOpts = {
+        headless:       true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: [
+            '--no-sandbox', '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', '--disable-gpu',
+            '--no-first-run', '--no-zygote', '--disable-extensions',
+        ]
+    };
     const c = new Client({
-        authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
-        puppeteer: {
-            headless: true,
-            args: [
-                '--no-sandbox', '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage', '--disable-gpu',
-                '--no-first-run', '--no-zygote', '--disable-extensions',
-            ]
-        }
+        authStrategy: new LocalAuth({ dataPath: wwebjsPath }),
+        puppeteer:    puppeteerOpts
     });
 
     c.on('qr', async (qr) => {
@@ -103,7 +153,7 @@ client = buildClient();
 client.initialize();
 
 // ── Static + SSE ──────────────────────────────────────────────────────────────
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/status', (_req, res) => res.json(waState));
 
@@ -299,5 +349,5 @@ async function sendMessages(contacts, template, templatePhoto) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`\nOpen http://localhost:${PORT} in your browser\n`));
